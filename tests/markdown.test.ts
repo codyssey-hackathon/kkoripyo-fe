@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { createElement, type MouseEvent } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import Markdown from 'react-markdown'
-import { analysisMarkdownOptions } from '../src/features/privacy-stream/markdown-options.ts'
+import { analysisMarkdownOptions } from '../src/lib/markdown.ts'
 
 function render(text: string) {
   return renderToStaticMarkup(
