@@ -2,34 +2,17 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
-@import './styles/base.css' layer(base);
 @import './styles/tokens.css';
-@import './styles/app.css';
-@import './styles/analysis-start.css';
-@import './styles/streaming.css';
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  line-height: 1.5;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-width: 0;
-}
-
-main {
-  max-width: 64rem;
-  margin-inline: auto;
-  padding: var(--space-2xl) var(--space-lg);
-}
-
 @theme inline {
+  --color-ink-secondary: var(--color-ink-2);
+  --color-cool: #466786;
+  --color-success: var(--color-ok);
+  --radius-input: 6px;
+  --radius-card: 10px;
+  --font-code: ui-monospace, SFMono-Regular, Consolas, monospace;
   --font-heading: var(--font-sans);
   --font-sans: var(--font-body);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -77,9 +60,45 @@ main {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply m-0 min-w-0 overflow-x-clip bg-background font-sans text-[16px] leading-[1.6] text-foreground antialiased caret-primary [font-synthesis:none];
   }
   html {
-    @apply font-sans;
+    @apply overflow-x-clip scroll-pt-[24px] font-sans leading-[1.5] [scrollbar-color:var(--color-rule-2)_var(--color-paper)];
+  }
+  ::selection {
+    @apply bg-accent text-foreground;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-ring;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply min-w-0 text-balance wrap-break-word;
+  }
+  p {
+    @apply text-pretty;
+  }
+  button,
+  a,
+  select {
+    @apply [-webkit-tap-highlight-color:transparent];
+  }
+  button:not(:disabled),
+  select {
+    @apply cursor-pointer;
+  }
+  button:disabled {
+    @apply cursor-not-allowed opacity-55;
+  }
+  svg {
+    @apply shrink-0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      @apply duration-[0.01ms]! [animation-duration:0.01ms]! [animation-iteration-count:1]! scroll-auto!;
+    }
   }
 }
