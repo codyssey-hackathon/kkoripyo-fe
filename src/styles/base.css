@@ -1,0 +1,62 @@
+/* Hallmark · shape: app screen · theme: Warm paper + ink blue · base · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V4 · weakest: E, explicit focus and reduced motion */
+html,
+body {
+  overflow-x: clip;
+}
+html {
+  scrollbar-color: var(--color-rule-2) var(--color-paper);
+  scroll-padding-top: var(--space-lg);
+}
+body {
+  font-family: var(--font-body);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  font-size: var(--text-md);
+  line-height: 1.6;
+  caret-color: var(--color-accent);
+}
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
+}
+h1,
+h2,
+h3 {
+  min-width: 0;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+button,
+a,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled),
+select {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+svg {
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
