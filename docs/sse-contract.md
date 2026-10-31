@@ -36,14 +36,19 @@ data: {"type":"done"}
 
 ```
 
-| `type`     | 데이터                                        | 프론트 처리                                                       |
-| ---------- | --------------------------------------------- | ----------------------------------------------------------------- |
-| `token`    | `text: string`                                | Markdown 본문에 추가. 띄어쓰기와 줄바꿈 보존                      |
-| `stage`    | `id`, `text`, `state: running / done / error` | 같은 ID의 진행 항목을 갱신. 본문과 분리                           |
-| `status`   | `text: string`                                | 현재 상태 안내                                                    |
-| `done`     | 추가 필드 없음                                | 완료 처리. 답변 복사·저장 활성화                                  |
-| `error`    | 백엔드 오류 정보                              | 안전한 오류 안내와 부분 답변 유지. 내부 예외 원문은 표시하지 않음 |
-| 그 외 타입 | 자유 형식                                     | 무시                                                              |
+| `type`    | 데이터                                                                               | 프론트 처리                                                                |
+| --------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| `token`   | `text`                                                                               | 추적 기록에 이어 붙임. `## 종합 리포트`로 시작하는 글은 리포트 카드로 분리 |
+| `stage`   | `id`, `text`, `state: running / done / error`                                        | 진행 목록에서 같은 ID 줄을 갱신, 진행률 어림                               |
+| `finding` | `category`, `label`, `value`, `evidence`, `certainty: confirmed / estimated`         | 찾는 즉시 항목 카드에 빨간 느낌표로 표시, 위험도·최근 발견 갱신            |
+| `stats`   | `posts`, `comments`, `photos_with_text`, `followers`, `following`, `friends`         | 진행 패널의 숫자                                                           |
+| `blur`    | `image_id`, `post_id`, `post_url`, `posted_at`, `reason`, `before`, `after`, `error` | "이 사진으로 교체하세요" 비포·애프터                                       |
+| `status`  | `text`                                                                               | 무시                                                                       |
+| `done`    | 없음                                                                                 | 완료. 리포트가 없으면 중단(비공개 계정 등)으로 표시                        |
+| `error`   | `message`                                                                            | 내부 원문은 숨기고 안내 문구만 표시                                        |
+| 그 외     | 자유 형식                                                                            | 무시                                                                       |
+
+`category` 값: `name`, `birthday`, `age`, `school`, `region`, `close_friend`, `phone`, `email`, `workplace`, `family`, `blood_type`, `other`. 백엔드는 조용한 구간에 15초마다 `: ping` 주석을 보낸다.
 
 프론트는 알려진 이벤트의 중요 필드를 Zod로 검증합니다. `done` 전에는 공백 이외의 답변이 최소 한 번 필요합니다. 완료 신호 없는 연결 종료, 빈 답변 완료, 잘못된 JSON이나 알려진 이벤트 형식, 실패 HTTP 응답은 오류로 처리합니다. 한 개의 `stage` 실패는 전체 분석 실패와 별개입니다.
 
