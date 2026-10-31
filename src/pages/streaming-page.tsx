@@ -5,46 +5,38 @@ import {
   Check,
   CircleAlert,
   Copy,
-  FileText,
-  Info,
   LoaderCircle,
-  Play,
-  RotateCcw,
   Square,
 } from 'lucide-react'
 import Markdown, { type Components } from 'react-markdown'
-import { useSearchParams } from 'react-router'
 import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
-import { exampleResponse } from '@/features/privacy-stream/stream-data'
-import { useMockStream } from '@/features/privacy-stream/use-mock-stream'
+import type { AnalysisStream } from '@/features/privacy-stream/use-analysis-stream'
+import { analysisMarkdownOptions } from '@/features/privacy-stream/markdown-options'
 
 const markdownComponents: Components = {
-  a: ({ href, children }) => (
-    <a href={href} target="_blank" rel="noreferrer">
-      {children}
-    </a>
-  ),
+  ...analysisMarkdownOptions.components,
   img: ({ src, alt }) => <img src={src} alt={alt ?? ''} loading="lazy" />,
+  table: ({ children }) => (
+    <div
+      className="stream-table-scroll"
+      role="region"
+      aria-label="분석 결과 표"
+      tabIndex={0}
+    >
+      <table>{children}</table>
+    </div>
+  ),
 }
 
-const statusLabels = {
-  streaming: '분석 답변을 작성하고 있어요',
-  stopped: '표시를 중지했어요. 이어서 읽을 수 있어요.',
-  error: '예시 연결 오류가 발생했어요. 이어서 다시 표시해 주세요.',
-  complete: '예시 분석이 완료됐어요',
-}
-
-function StreamingPage({ handle }: { handle: string }) {
-  const [params] = useSearchParams()
-  const stream = useMockStream({
-    text: exampleResponse,
-    simulateError: params.get('state') === 'error',
-  })
+function StreamingPage({ stream }: { stream: AnalysisStream }) {
+  const handle = stream.handle
   const [copyMessage, setCopyMessage] = useState('')
   const [awayFromBottom, setAwayFromBottom] = useState(false)
   const followTail = useRef(true)
+  const progressRef = useRef<HTMLElement>(null)
   const isStreaming = stream.status === 'streaming'
+  const isReceiving = isStreaming || stream.status === 'connecting'
   const isComplete = stream.status === 'complete'
 
   useEffect(() => {
@@ -68,7 +60,7 @@ function StreamingPage({ handle }: { handle: string }) {
         behavior: 'instant',
       })
     }
-  }, [stream.visibleText])
+  }, [stream.visibleText, stream.stages])
 
   function jumpToLatest() {
     followTail.current = true
@@ -79,12 +71,11 @@ function StreamingPage({ handle }: { handle: string }) {
     })
   }
 
-  function restartAnalysis() {
-    followTail.current = true
-    setAwayFromBottom(false)
-    setCopyMessage('')
-    stream.restart()
-    window.scrollTo({ top: 0, behavior: 'instant' })
+  function jumpToProgress() {
+    followTail.current = false
+    setAwayFromBottom(true)
+    progressRef.current?.focus({ preventScroll: true })
+    progressRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
   }
 
   async function copyResponse() {
@@ -102,7 +93,7 @@ function StreamingPage({ handle }: { handle: string }) {
     )
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = `kkoripyo-${handle}-example.md`
+    anchor.download = `kkoripyo-${handle}.md`
     anchor.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
@@ -112,116 +103,175 @@ function StreamingPage({ handle }: { handle: string }) {
       <a className="skip-link" href="#stream-main">
         본문으로 이동
       </a>
-      <AppHeader showStartAction />
-      <main id="stream-main" className="streaming-page">
+      <AppHeader />
+      <main
+        id="stream-main"
+        className="streaming-page"
+        data-receiving={isReceiving}
+      >
         <header className="stream-page-heading">
           <div className="stream-account-line">
             <span>@{handle}</span>
-            <span className="stream-example-label">예시 분석</span>
           </div>
           <h1>공개된 일상 속, 개인정보의 단서를 살펴볼게요</h1>
-          <p>
-            게시물과 댓글에 남은 정보부터 나에게 맞는 보호 방법까지, 하나씩
-            확인하세요.
-          </p>
-          <div className="stream-demo-notice">
-            <Info size={14} aria-hidden="true" />
-            <span>
-              실제 @{handle} 계정을 조회한 결과가 아닌, 가상의 콘텐츠로 구성한
-              예시 답변입니다.
-            </span>
-          </div>
         </header>
 
-        <div className="stream-answer-heading">
-          <h2>
-            <FileText size={16} aria-hidden="true" />
-            분석 답변
-          </h2>
-          <Button
-            type="button"
-            variant="ghost"
-            className="stream-replay transition-colors"
-            onClick={restartAnalysis}
-          >
-            <RotateCcw size={14} aria-hidden="true" />
-            다시 재생
-          </Button>
-        </div>
+        <section className="stream-answer-panel" aria-label="분석 답변">
+          {stream.stages.length > 0 ? (
+            <section
+              ref={progressRef}
+              id="analysis-progress"
+              className="stream-progress"
+              aria-label="분석 진행 상황"
+              tabIndex={-1}
+            >
+              <h2>분석 진행 상황</h2>
+              <ul>
+                {stream.stages.map((stage) => (
+                  <li key={stage.id} data-state={stage.state}>
+                    {stage.state === 'running' && isReceiving ? (
+                      <LoaderCircle
+                        size={14}
+                        className="stream-loader"
+                        aria-hidden="true"
+                      />
+                    ) : stage.state === 'done' ? (
+                      <Check size={14} aria-hidden="true" />
+                    ) : stage.state === 'error' ? (
+                      <CircleAlert size={14} aria-hidden="true" />
+                    ) : (
+                      <Square size={12} aria-hidden="true" />
+                    )}
+                    <span className="stream-stage-text">{stage.text}</span>
+                    <span className="stream-stage-state">
+                      {stage.state === 'done'
+                        ? '완료'
+                        : stage.state === 'error'
+                          ? '실패'
+                          : isReceiving
+                            ? '진행 중'
+                            : '중단됨'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-        <article
-          className="stream-document"
-          aria-label="개인정보 노출 분석 답변"
-          aria-busy={isStreaming}
-        >
-          <Markdown components={markdownComponents} skipHtml>
-            {stream.visibleText}
-          </Markdown>
-          {!stream.visibleText ? (
-            <div className="stream-starting" aria-hidden="true">
-              <span />
-              <span />
-              <span />
+          <article
+            className="stream-document"
+            aria-label="개인정보 노출 분석 답변"
+            aria-busy={isReceiving}
+          >
+            <Markdown
+              {...analysisMarkdownOptions}
+              components={markdownComponents}
+            >
+              {stream.visibleText}
+            </Markdown>
+            {!stream.visibleText && isReceiving ? (
+              <div className="stream-starting" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+            ) : null}
+          </article>
+
+          {stream.status === 'error' || stream.status === 'stopped' ? (
+            <div className="stream-connection-notice" role="alert">
+              <p>
+                {stream.error ||
+                  '수신을 중지했어요. 지금까지 받은 답변은 유지됩니다.'}
+              </p>
+              <p>
+                새 분석은 상단 꼬리표 로고를 눌러 시작할 수 있어요.
+                새로고침하거나 화면을 나가면 이 답변을 복원할 수 없어요.
+              </p>
             </div>
           ) : null}
-        </article>
 
-        {isComplete ? (
-          <div className="stream-result-actions" aria-label="분석 답변 저장">
-            <Button
-              type="button"
-              variant="ghost"
-              className="transition-colors"
-              onClick={() => void copyResponse()}
-            >
-              <Copy size={15} aria-hidden="true" />
-              답변 복사
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="transition-colors"
-              onClick={saveResponse}
-            >
-              <ArrowDownToLine size={15} aria-hidden="true" />
-              답변 저장
-            </Button>
-          </div>
-        ) : null}
-        <p className="stream-copy-feedback" role="status">
-          {copyMessage}
-        </p>
-
-        <div className="stream-bottom-bar">
-          {awayFromBottom ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="stream-jump transition-colors"
-              onClick={jumpToLatest}
-            >
-              <ArrowDown size={14} aria-hidden="true" />
-              최근 답변으로
-            </Button>
+          {isComplete ? (
+            <div className="stream-result-actions" aria-label="분석 답변 저장">
+              <Button
+                type="button"
+                variant="ghost"
+                className="transition-colors"
+                onClick={() => void copyResponse()}
+              >
+                <Copy size={15} aria-hidden="true" />
+                답변 복사
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="transition-colors"
+                onClick={saveResponse}
+              >
+                <ArrowDownToLine size={15} aria-hidden="true" />
+                답변 저장
+              </Button>
+            </div>
           ) : null}
-          <div className="stream-playback-bar">
-            <div className="stream-status" role="status" aria-live="polite">
-              {isStreaming ? (
+          <p className="stream-copy-feedback" role="status">
+            {copyMessage}
+          </p>
+
+          <p className="sr-only" role="status">
+            {isComplete ? '분석 답변이 도착했어요.' : ''}
+          </p>
+        </section>
+        <footer className="stream-notes">
+          <p className="stream-disclaimer">
+            새로고침하면 답변이 사라져요. 완료 후 답변을 저장해 주세요.
+          </p>
+          <p className="stream-disclaimer">
+            AI의 추론은 실제 사실과 다를 수 있어요. 판단 근거를 함께 확인하세요.
+          </p>
+        </footer>
+
+        {isReceiving ? (
+          <div className="stream-bottom-bar">
+            {awayFromBottom ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="stream-jump transition-colors"
+                onClick={jumpToLatest}
+              >
+                <ArrowDown size={14} aria-hidden="true" />
+                최근 답변으로
+              </Button>
+            ) : null}
+            <div className="stream-playback-bar">
+              <div className="stream-status" role="status" aria-live="polite">
                 <LoaderCircle
                   className="stream-loader"
                   size={16}
                   aria-hidden="true"
                 />
-              ) : isComplete ? (
-                <Check size={16} aria-hidden="true" />
-              ) : stream.status === 'error' ? (
-                <CircleAlert size={16} aria-hidden="true" />
-              ) : (
-                <Square size={13} aria-hidden="true" />
-              )}
-              <span>{statusLabels[stream.status]}</span>
-            </div>
-            {isStreaming ? (
+                <div className="stream-status-copy">
+                  <span className="stream-status-text">
+                    {isStreaming
+                      ? stream.progressText ||
+                        (stream.visibleText
+                          ? '분석 답변을 작성하고 있어요'
+                          : '분석 정보를 확인하고 있어요')
+                      : '분석 답변에 연결하고 있어요'}
+                  </span>
+                  {stream.stages.length > 0 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="stream-progress-link"
+                      aria-controls="analysis-progress"
+                      onClick={jumpToProgress}
+                    >
+                      진행 내역 보기
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -229,26 +279,11 @@ function StreamingPage({ handle }: { handle: string }) {
                 onClick={stream.stop}
               >
                 <Square size={13} aria-hidden="true" />
-                표시 중지
+                수신 중지
               </Button>
-            ) : !isComplete ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="stream-control transition-colors"
-                onClick={stream.resume}
-              >
-                <Play size={14} aria-hidden="true" />
-                이어서 표시
-              </Button>
-            ) : (
-              <span className="stream-complete-label">답변 작성 완료</span>
-            )}
+            </div>
           </div>
-          <p className="stream-disclaimer">
-            AI의 추론은 실제 사실과 다를 수 있어요. 판단 근거를 함께 확인하세요.
-          </p>
-        </div>
+        ) : null}
       </main>
     </>
   )

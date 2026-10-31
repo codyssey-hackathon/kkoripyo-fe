@@ -8,7 +8,6 @@ read_when:
 
 # Commit Guidelines
 
-- Work in a new worktree and task branch as described in `.agents/workflow.md`.
 - Use Conventional Commits.
 - Write concise, specific commit messages in Korean.
 - Split commits by logical change when practical.
