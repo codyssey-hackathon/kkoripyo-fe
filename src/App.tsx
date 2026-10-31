@@ -1,17 +1,12 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import HomePage from '@/pages/home-page'
 import NotFoundPage from '@/pages/not-found-page'
-
-function LegacyStreamingRedirect() {
-  const { search } = useLocation()
-  return <Navigate to={`/${search}`} replace />
-}
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/streaming" element={<LegacyStreamingRedirect />} />
+      <Route path="/streaming" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
