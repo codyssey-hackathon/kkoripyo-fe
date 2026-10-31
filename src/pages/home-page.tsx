@@ -1,32 +1,40 @@
 import { lazy, Suspense, useRef, useState, type FormEvent } from 'react'
-import { ArrowRight, CircleAlert, Info, ScanLine } from 'lucide-react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { ArrowRight, CircleAlert, ScanLine } from 'lucide-react'
+import { useLocation, useSearchParams } from 'react-router'
 import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { analysisHandleSchema } from '@/features/privacy-stream/analysis-handle'
+import { useAnalysisStream } from '@/features/privacy-stream/use-analysis-stream'
 
 const StreamingPage = lazy(() => import('@/pages/streaming-page'))
 
-function AnalysisStart({ initialHandle }: { initialHandle: string }) {
-  const navigate = useNavigate()
+function AnalysisStart({
+  initialHandle,
+  onStart,
+}: {
+  initialHandle: string
+  onStart: (handle: string) => void
+}) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const submitting = useRef(false)
   const [handle, setHandle] = useState(initialHandle)
   const [error, setError] = useState(
-    initialHandle ? '아이디를 확인하고 다시 제출해 주세요.' : '',
+    initialHandle && !analysisHandleSchema.safeParse(initialHandle).success
+      ? '아이디를 확인하고 다시 제출해 주세요.'
+      : '',
   )
-
   function submitAnalysis(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting.current) return
     const result = analysisHandleSchema.safeParse(handle)
     if (!result.success) {
       setError(result.error.issues[0].message)
       inputRef.current?.focus()
       return
     }
-    navigate({
-      pathname: '/',
-      search: new URLSearchParams({ handle: result.data }).toString(),
-    })
+    submitting.current = true
+    setError('')
+    onStart(result.data)
     window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
@@ -54,8 +62,12 @@ function AnalysisStart({ initialHandle }: { initialHandle: string }) {
           </p>
         </div>
 
-        <form className="analysis-form" onSubmit={submitAnalysis} noValidate>
-          <label htmlFor="instagram-handle">Instagram 아이디</label>
+        <form
+          className="analysis-form"
+          onSubmit={(event) => void submitAnalysis(event)}
+
+          noValidate
+        >
           <div className="analysis-input-row">
             <div className="analysis-handle-field" data-invalid={!!error}>
               <span aria-hidden="true">@</span>
@@ -66,6 +78,7 @@ function AnalysisStart({ initialHandle }: { initialHandle: string }) {
                 type="text"
                 placeholder="instagram_id"
                 value={handle}
+
                 onChange={(event) => {
                   setHandle(event.target.value)
                   if (error) setError('')
@@ -74,8 +87,9 @@ function AnalysisStart({ initialHandle }: { initialHandle: string }) {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
+                aria-label="Instagram 아이디"
                 aria-invalid={!!error}
-                aria-describedby={`handle-help${error ? ' handle-error' : ''}`}
+                aria-describedby={error ? 'handle-error' : undefined}
                 enterKeyHint="go"
               />
             </div>
@@ -84,22 +98,12 @@ function AnalysisStart({ initialHandle }: { initialHandle: string }) {
               <ArrowRight size={17} aria-hidden="true" />
             </Button>
           </div>
-          <p id="handle-help" className="analysis-input-help">
-            영문, 숫자, 마침표(.), 밑줄(_) · 최대 30자
-          </p>
           {error ? (
             <p id="handle-error" className="analysis-input-error" role="alert">
               <CircleAlert size={14} aria-hidden="true" />
               {error}
             </p>
           ) : null}
-          <div className="analysis-example-note">
-            <Info size={15} aria-hidden="true" />
-            <p>
-              현재는 실제 계정 조회 없이 예시 분석을 보여드려요. 입력한 아이디는
-              분석 화면에만 표시됩니다.
-            </p>
-          </div>
         </form>
 
         <div className="analysis-flow" aria-label="분석 이용 순서">
@@ -123,28 +127,42 @@ function AnalysisStart({ initialHandle }: { initialHandle: string }) {
   )
 }
 
-function HomePage() {
-  const [params] = useSearchParams()
-  const rawHandle = params.get('handle') ?? ''
-  const result = analysisHandleSchema.safeParse(rawHandle)
-
-  if (!result.success) {
-    return <AnalysisStart key={rawHandle} initialHandle={rawHandle} />
+function AnalysisSession({ initialHandle }: { initialHandle: string }) {
+  const stream = useAnalysisStream()
+  if (stream.status === 'idle') {
+    return (
+      <AnalysisStart initialHandle={initialHandle} onStart={stream.start} />
+    )
   }
-
   return (
     <Suspense
       fallback={
         <>
-          <AppHeader showStartAction />
-          <main className="route-loading" role="status">
-            분석 화면을 불러오고 있어요…
+          <AppHeader />
+          <main className="streaming-page">
+            <section className="stream-answer-panel" aria-label="분석 답변">
+              <p className="route-loading" role="status">
+                분석 화면을 불러오고 있어요…
+              </p>
+            </section>
           </main>
         </>
       }
     >
-      <StreamingPage key={result.data} handle={result.data} />
+      <StreamingPage stream={stream} />
     </Suspense>
+  )
+}
+
+function HomePage() {
+  const [params] = useSearchParams()
+  const location = useLocation()
+  // Navigation home ends this run. Reloads only prefill the input, never POST.
+  return (
+    <AnalysisSession
+      key={location.key}
+      initialHandle={params.get('handle') ?? ''}
+    />
   )
 }
 

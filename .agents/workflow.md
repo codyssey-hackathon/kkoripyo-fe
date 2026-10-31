@@ -15,7 +15,6 @@ read_when:
 - When requirements are clear, proceed without waiting for separate approval to start.
 - If essential information is missing, ask the user and continue any work that does not depend on the answer.
 - Preserve the user's existing changes and avoid unrelated modifications.
-- Create a new worktree for each task, and edit files and run verification in that worktree.
 - An implementation request alone does not authorize commits or pushes.
 
 ## Agent Roles
@@ -43,8 +42,7 @@ Role names describe how work is divided; they are not model names.
 ### 1. Understand the Request and Existing Code
 
 - Read `AGENTS.md` and any additional guides relevant to the task.
-- Inspect existing working directory changes, then create a new worktree and task branch. Use the `codex/` branch prefix.
-- Tell the user the new worktree path and pass it to sub-agents as their working location.
+- Inspect existing working directory changes.
 - Define the requested behavior, scope of changes, and completion criteria.
 - The main agent directly inspects relevant files, existing patterns, reusable code, and the impact of the changes.
 - The main agent decides the implementation approach based on requirements, constraints, and the existing code.
