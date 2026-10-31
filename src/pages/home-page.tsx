@@ -1,174 +1,168 @@
-import { lazy, Suspense, useRef, useState, type FormEvent } from 'react'
-import { ArrowRight, CircleAlert, ScanLine } from 'lucide-react'
-import { useLocation, useSearchParams } from 'react-router'
-import { AppHeader } from '@/components/app-header'
-import { Button } from '@/components/ui/button'
-import { analysisHandleSchema } from '@/features/privacy-stream/analysis-handle'
-import { useAnalysisStream } from '@/features/privacy-stream/use-analysis-stream'
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { FindingsBoard } from '@/features/scan/components/findings-board'
+import { PhotoSwap } from '@/features/scan/components/photo-swap'
+import { ProgressPanel } from '@/features/scan/components/progress-panel'
+import { RiskPanel } from '@/features/scan/components/risk-panel'
+import { SearchForm } from '@/features/scan/components/search-form'
+import { Transcript } from '@/features/scan/components/transcript'
+import { useScan } from '@/features/scan/use-scan'
 
-const StreamingPage = lazy(() => import('@/pages/streaming-page'))
+const ease = [0.16, 1, 0.3, 1] as const
 
-function AnalysisStart({
-  initialHandle,
-  onStart,
-}: {
-  initialHandle: string
-  onStart: (handle: string) => void
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const submitting = useRef(false)
-  const [handle, setHandle] = useState(initialHandle)
-  const [error, setError] = useState(
-    initialHandle && !analysisHandleSchema.safeParse(initialHandle).success
-      ? '아이디를 확인하고 다시 제출해 주세요.'
-      : '',
-  )
-  function submitAnalysis(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (submitting.current) return
-    const result = analysisHandleSchema.safeParse(handle)
-    if (!result.success) {
-      setError(result.error.issues[0].message)
-      inputRef.current?.focus()
-      return
-    }
-    submitting.current = true
-    setError('')
-    onStart(result.data)
-    window.scrollTo({ top: 0, behavior: 'instant' })
-  }
-
+function Brand({ small = false }: { small?: boolean }) {
   return (
-    <>
-      <a
-        className="absolute top-[16px] left-[16px] z-500 -translate-y-[200%] rounded-input bg-primary px-[24px] py-[12px] text-primary-foreground focus-visible:translate-y-0"
-        href="#start-main"
-      >
-        본문으로 이동
-      </a>
-      <AppHeader />
-      <main
-        id="start-main"
-        className="mx-auto min-h-[calc(100dvh-73px)] w-full max-w-[800px] px-[32px] pt-[72px] pb-[40px] [@media(max-width:45rem)]:min-h-[calc(100dvh-65px)] [@media(max-width:45rem)]:px-[20px] [@media(max-width:45rem)]:pt-[48px] [@media(max-width:45rem)]:pb-[32px]"
-      >
-        <div className="text-center">
-          <span className="inline-flex items-center gap-[8px] text-[14px] font-medium text-primary">
-            <ScanLine size={16} aria-hidden="true" />
-            SNS 개인정보 노출 분석
-          </span>
-          <h1 className="mt-[24px] text-[clamp(32px,4vw,46px)] leading-[1.4] font-semibold tracking-[-0.05em] break-keep text-foreground [@media(max-width:45rem)]:text-[32px]">
-            내 일상은,
-            <br />
-            어디까지 드러나 있을까요?
-          </h1>
-          <p className="mt-[24px] text-[16px] leading-[1.9] break-keep text-ink-secondary [@media(max-width:45rem)]:text-[14px]">
-            게시물 하나, 댓글 한 줄에 남은 개인정보의 단서.
-            <br className="[@media(max-width:45rem)]:hidden" />
-            나를 드러내는 정보와 보호 방법을 함께 살펴보세요.
-          </p>
-        </div>
-
-        <form
-          className="mt-[40px] rounded-[14px] border border-border bg-card p-[28px] [@media(max-width:45rem)]:mt-[32px] [@media(max-width:45rem)]:px-[16px] [@media(max-width:45rem)]:py-[24px]"
-          onSubmit={(event) => void submitAnalysis(event)}
-          noValidate
-        >
-          <div className="flex gap-[12px] [@media(max-width:45rem)]:flex-col">
-            <div
-              className="flex min-h-[56px] min-w-0 flex-1 items-center gap-[8px] rounded-input border border-input bg-card px-[16px] focus-within:border-ring focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring data-[invalid=true]:border-destructive data-[invalid=true]:focus-within:border-destructive"
-              data-invalid={!!error}
-            >
-              <span
-                className="text-[18px] text-muted-foreground"
-                aria-hidden="true"
-              >
-                @
-              </span>
-              <input
-                ref={inputRef}
-                id="instagram-handle"
-                name="handle"
-                type="text"
-                placeholder="instagram_id"
-                value={handle}
-                className="min-h-[54px] min-w-0 w-full border-0 bg-transparent text-[16px] text-foreground outline-none placeholder:text-muted-foreground"
-                onChange={(event) => {
-                  setHandle(event.target.value)
-                  if (error) setError('')
-                }}
-                autoComplete="off"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                aria-label="Instagram 아이디"
-                aria-invalid={!!error}
-                aria-describedby={error ? 'handle-error' : undefined}
-                enterKeyHint="go"
-              />
-            </div>
-            <Button
-              type="submit"
-              className="min-h-[56px] shrink-0 gap-[12px] rounded-[6px] bg-clip-border px-[24px] text-sm transition-colors"
-            >
-              분석 시작하기
-              <ArrowRight size={17} aria-hidden="true" />
-            </Button>
-          </div>
-          {error ? (
-            <p
-              id="handle-error"
-              className="mt-[8px] flex items-start gap-[8px] text-[14px] leading-[1.7] text-destructive"
-              role="alert"
-            >
-              <CircleAlert size={14} className="mt-[4px]" aria-hidden="true" />
-              {error}
-            </p>
-          ) : null}
-        </form>
-      </main>
-    </>
-  )
-}
-
-function AnalysisSession({ initialHandle }: { initialHandle: string }) {
-  const stream = useAnalysisStream()
-  if (stream.status === 'idle') {
-    return (
-      <AnalysisStart initialHandle={initialHandle} onStart={stream.start} />
-    )
-  }
-  return (
-    <Suspense
-      fallback={
-        <>
-          <AppHeader />
-          <main className="mx-auto min-h-[calc(100dvh-73px)] w-full max-w-[880px] px-[40px] py-[56px] [@media(max-width:45rem)]:min-h-[calc(100dvh-65px)] [@media(max-width:45rem)]:px-[20px] [@media(max-width:45rem)]:py-[32px]">
-            <section
-              className="mt-[40px] min-h-[220px] rounded-card border border-border bg-card px-[32px] py-[28px] [@media(max-width:45rem)]:mt-[24px] [@media(max-width:45rem)]:px-[16px] [@media(max-width:45rem)]:py-[24px]"
-              aria-label="분석 답변"
-            >
-              <p className="text-[14px] text-muted-foreground" role="status">
-                분석 화면을 불러오고 있어요…
-              </p>
-            </section>
-          </main>
-        </>
-      }
+    <a
+      href="/"
+      className="flex shrink-0 items-center gap-2 font-bold tracking-[-0.03em] text-fg"
+      aria-label="꼬리표 처음 화면"
     >
-      <StreamingPage stream={stream} />
-    </Suspense>
+      <span
+        aria-hidden
+        className="flex size-6 items-center justify-center rounded-md bg-fg text-[11px] font-black text-bg"
+      >
+        ㄲ
+      </span>
+      <span className={small ? 'text-[16px]' : 'text-[18px]'}>꼬리표</span>
+    </a>
   )
 }
+
+const spring = {
+  type: 'spring',
+  stiffness: 170,
+  damping: 26,
+  mass: 0.9,
+} as const
 
 function HomePage() {
-  const [params] = useSearchParams()
-  const location = useLocation()
-  // Navigation home ends this run. Reloads only prefill the input, never POST.
+  const { state, start, stop } = useScan()
+  const idle = state.phase === 'idle'
+  const running = state.phase === 'running'
+
   return (
-    <AnalysisSession
-      key={location.key}
-      initialHandle={params.get('handle') ?? ''}
-    />
+    <LayoutGroup>
+      {/* 입력창은 처음 화면과 진단 화면에서 같은 요소다. 위치만 바뀌어 위로 미끄러져 올라간다 */}
+      <header
+        className={
+          idle
+            ? ''
+            : 'sticky top-0 z-20 border-b border-line bg-bg/75 backdrop-blur-xl'
+        }
+      >
+        <div
+          className={
+            idle
+              ? 'mx-auto flex min-h-dvh w-full max-w-[720px] flex-col px-4 sm:px-6'
+              : 'mx-auto flex max-w-[1180px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6'
+          }
+        >
+          <motion.div
+            layout="position"
+            transition={spring}
+            className={idle ? 'flex h-16 items-center' : ''}
+          >
+            <Brand small={!idle} />
+          </motion.div>
+          <div
+            className={
+              idle
+                ? 'flex flex-1 flex-col justify-center pb-[12vh]'
+                : 'contents'
+            }
+          >
+            <AnimatePresence mode="popLayout">
+              {idle && (
+                <motion.div
+                  key="hero"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -40, filter: 'blur(6px)' }}
+                  transition={{ duration: 0.45, ease }}
+                >
+                  <p className="text-[13px] font-medium tracking-[0.18em] text-muted">
+                    INSTAGRAM EXPOSURE CHECK
+                  </p>
+                  <h1 className="mt-4 text-[34px] leading-[1.2] font-extrabold tracking-[-0.035em] text-fg sm:text-[52px]">
+                    아이디 하나면
+                    <br />
+                    <span className="bg-gradient-to-b from-white to-[#8a8a92] bg-clip-text text-transparent">
+                      당신이 누군지 압니다.
+                    </span>
+                  </h1>
+                  <p className="mt-5 max-w-[34rem] text-[15.5px] leading-relaxed text-fg-2 sm:text-[17px]">
+                    이름, 생일, 학교, 사는 동네, 가장 친한 친구까지. 낯선 사람이
+                    당신의 공개 계정과 친구들의 피드만으로 알아낼 수 있는 것을
+                    직접 추적해 보여드립니다.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <motion.div
+              layout="position"
+              transition={spring}
+              className={idle ? 'mt-9' : 'w-full sm:max-w-[440px]'}
+            >
+              <SearchForm
+                compact={!idle}
+                running={running}
+                onSubmit={start}
+                onStop={stop}
+              />
+            </motion.div>
+            <AnimatePresence mode="popLayout">
+              {idle && (
+                <motion.p
+                  key="note"
+                  exit={{ opacity: 0 }}
+                  className="mt-4 text-[12.5px] leading-relaxed text-faint"
+                >
+                  누구나 볼 수 있는 공개 정보만 확인합니다. 비공개 계정은
+                  분석하지 않습니다.
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </header>
+
+      {!idle && (
+        <main className="mx-auto flex max-w-[1180px] flex-col gap-4 px-4 pt-5 pb-24 sm:gap-5 sm:px-6 sm:pt-8">
+          {state.error && (
+            <div
+              role="alert"
+              className="rounded-xl border border-alert-line bg-alert-soft px-4 py-3 text-[14px] text-alert-2"
+            >
+              {state.error}
+            </div>
+          )}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.25 }}
+          >
+            <ProgressPanel state={state} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.38 }}
+            className="grid gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]"
+          >
+            <FindingsBoard state={state} />
+            <RiskPanel state={state} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.5 }}
+            className="flex flex-col gap-4 sm:gap-5"
+          >
+            <Transcript state={state} />
+            <PhotoSwap photos={state.photos} />
+          </motion.div>
+        </main>
+      )}
+    </LayoutGroup>
   )
 }
 
