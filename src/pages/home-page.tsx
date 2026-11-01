@@ -41,6 +41,7 @@ function HomePage() {
   const idle = state.phase === 'idle'
   const running = state.phase === 'running'
   const dashboardRef = useRef<HTMLDivElement>(null)
+  const riskNumberRef = useRef<HTMLDivElement>(null)
 
   return (
     <LayoutGroup>
@@ -150,7 +151,7 @@ function HomePage() {
             className="grid scroll-mt-24 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]"
           >
             <FindingsBoard state={state} />
-            <RiskPanel state={state} />
+            <RiskPanel state={state} numberRef={riskNumberRef} />
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -166,7 +167,7 @@ function HomePage() {
       {!idle && (
         <LiveToast
           state={state}
-          watchRef={dashboardRef}
+          watchRef={riskNumberRef}
           onJump={() =>
             dashboardRef.current?.scrollIntoView({
               behavior: 'smooth',
