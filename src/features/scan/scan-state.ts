@@ -12,7 +12,11 @@ export type Stage = {
   id: string
   text: string
   state: 'running' | 'done' | 'error'
+  /** 왜 이 단계를 하는지 (진행 중에 받은 설명을 끝까지 유지) */
+  detail?: string
   at: number
+  /** 마지막으로 바뀐 시각 */
+  updatedAt: number
 }
 
 export type Finding = Omit<FindingEvent, 'type'> & { at: number; seq: number }
@@ -148,11 +152,15 @@ function applyEvent(
         id: event.id,
         text: event.text,
         state: event.state,
+        detail: event.detail,
         at: now,
+        updatedAt: now,
       }
       const stages = exists
         ? state.stages.map((s) =>
-            s.id === event.id ? { ...stage, at: s.at } : s,
+            s.id === event.id
+              ? { ...stage, at: s.at, detail: event.detail || s.detail }
+              : s,
           )
         : [...state.stages, stage]
       return {
