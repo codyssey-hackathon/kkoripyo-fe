@@ -53,7 +53,7 @@ function HomePage() {
           className={
             idle
               ? 'mx-auto flex min-h-dvh w-full max-w-[720px] flex-col px-4 sm:px-6'
-              : 'mx-auto flex max-w-[1180px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6'
+              : 'mx-auto flex max-w-[1440px] flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6'
           }
         >
           <motion.div
@@ -79,10 +79,7 @@ function HomePage() {
                   exit={{ opacity: 0, y: -40, filter: 'blur(6px)' }}
                   transition={{ duration: 0.45, ease }}
                 >
-                  <p className="text-[13px] font-medium tracking-[0.18em] text-muted">
-                    INSTAGRAM EXPOSURE CHECK
-                  </p>
-                  <h1 className="mt-4 text-[34px] leading-[1.2] font-extrabold tracking-[-0.035em] text-fg sm:text-[52px]">
+                  <h1 className="text-[34px] leading-[1.2] font-extrabold tracking-[-0.035em] text-fg sm:text-[52px]">
                     아이디 하나면
                     <br />
                     <span className="bg-gradient-to-b from-white to-[#8a8a92] bg-clip-text text-transparent">
@@ -100,7 +97,7 @@ function HomePage() {
             <motion.div
               layout="position"
               transition={spring}
-              className={idle ? 'mt-9' : 'w-full sm:max-w-[440px]'}
+              className={idle ? 'mt-9' : 'w-full sm:max-w-[560px]'}
             >
               <SearchForm
                 compact={!idle}
@@ -126,7 +123,7 @@ function HomePage() {
       </header>
 
       {!idle && (
-        <main className="mx-auto flex max-w-[1180px] flex-col gap-4 px-4 pt-5 pb-24 sm:gap-5 sm:px-6 sm:pt-8">
+        <main className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 pt-5 pb-24 sm:gap-5 sm:px-6 sm:pt-8">
           {state.error && (
             <div
               role="alert"
