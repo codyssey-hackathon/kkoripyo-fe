@@ -13,16 +13,16 @@ function Brand({ small = false }: { small?: boolean }) {
   return (
     <a
       href="/"
-      className="flex shrink-0 items-center gap-2 font-bold tracking-[-0.03em] text-fg"
+      className="flex shrink-0 items-center"
       aria-label="꼬리표 처음 화면"
     >
-      <span
-        aria-hidden
-        className="flex size-6 items-center justify-center rounded-md bg-fg text-[11px] font-black text-bg"
-      >
-        ㄲ
-      </span>
-      <span className={small ? 'text-[16px]' : 'text-[18px]'}>꼬리표</span>
+      <img
+        src="/logo.png"
+        alt="꼬리표"
+        width={1390}
+        height={383}
+        className={small ? 'h-7 w-auto' : 'h-9 w-auto sm:h-10'}
+      />
     </a>
   )
 }
