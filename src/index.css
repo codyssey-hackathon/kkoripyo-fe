@@ -6,6 +6,12 @@
   :root {
     color-scheme: dark;
   }
+  /* 넓은 화면에서는 전체를 크게 (휴대폰은 그대로) */
+  @media (min-width: 1024px) {
+    body {
+      zoom: 1.3;
+    }
+  }
   html {
     @apply bg-bg font-sans text-fg antialiased;
     overflow-x: clip;
