@@ -1,7 +1,7 @@
 import { apiOrigin } from '@/lib/env'
 import type { BlurEvent } from '../events.ts'
 
-/** 백엔드가 준 상대 주소(/api/v1/...)는 백엔드 주소 기준으로 바꾼다 (절대 주소는 그대로) */
+/** 백엔드가 준 상대 주소(/api/v1/...)는 백엔드 주소 기준으로 바꾼다 */
 function fromApi(url: string) {
   try {
     return new URL(url, apiOrigin).href
@@ -53,7 +53,7 @@ export function PhotoSwap({ photos }: { photos: BlurEvent[] }) {
             <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-4">
               <figure className="min-w-0">
                 <img
-                  src={fromApi(p.before)}
+                  src={p.before}
                   alt="지금 올라가 있는 원본 사진"
                   referrerPolicy="no-referrer"
                   loading="lazy"
