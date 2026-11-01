@@ -13,8 +13,8 @@ function useInView(ref: RefObject<HTMLElement | null>) {
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => setInView(entry.isIntersecting),
-      // 위쪽 상단바에 가려지는 부분은 안 보이는 것으로 친다
-      { rootMargin: '-80px 0px 0px 0px', threshold: 0.15 },
+      // 숫자가 반 이상 가려지면(상단바 아래로 숨거나 화면 밖) 바로 안 보이는 것으로 친다
+      { rootMargin: '-90px 0px 0px 0px', threshold: 0.5 },
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -23,7 +23,7 @@ function useInView(ref: RefObject<HTMLElement | null>) {
 }
 
 /**
- * 노출 위험도 영역이 스크롤로 화면 밖에 있을 때, 새 발견이나 단계 변화가 생긴 순간에만
+ * 노출 위험도 숫자가 스크롤로 화면 밖에 있을 때, 새 발견이나 단계 변화가 생긴 순간에만
  * 오른쪽 아래에 작게 띄운다.
  */
 export function LiveToast({
