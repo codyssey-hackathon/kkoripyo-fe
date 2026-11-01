@@ -1,43 +1,64 @@
-# kkoripyo-fe
+# 꼬리표 (kkoripyo) 프론트엔드
 
-## 화면 흐름
+인스타그램 아이디 하나로 낯선 사람이 알아낼 수 있는 개인정보를 실시간으로 추적해 보여주는 진단 화면입니다.
+분석은 [kkoripyo-be](https://github.com/codyssey-hackathon/kkoripyo-be) 백엔드가 하고, 이 화면은 백엔드의 SSE 스트림을 받아 표시합니다.
 
-메인(`/`)에서 Instagram 아이디를 제출하면 `POST /api/v1/agent/stream`에 `{"handle":"아이디"}`를 보내 실제 분석을 시작합니다. 백엔드가 보내는 `stage`·`status`는 진행 상황으로, `token`은 Markdown 분석 답변으로 구분해 표시합니다. `done`을 받으면 완료 처리하고 답변 복사·저장을 활성화합니다. 기존 `/streaming` 주소도 메인으로 이동합니다.
+- React 19 · Vite · TypeScript · Tailwind CSS · motion
+- 화면: 아이디 입력 → 실시간 추적 상황(지금 하는 일·이유·유추) → 드러난 정보 카드·노출 위험도 → 추적 기록·종합 리포트 → 가린 사진 비포·애프터
 
-분석은 사용자가 시작 버튼을 누를 때만 실행합니다. 새로고침이나 화면 진입으로 자동 요청하지 않습니다. 현재 백엔드는 분석 ID에 따른 결과 저장·복원·이어받기를 제공하지 않으므로 새로고침하면 입력 화면으로 돌아갑니다. 새 분석은 상단 꼬리표 로고를 눌러 입력 화면으로 돌아간 뒤 아이디를 제출해 시작합니다. 계정 수집과 AI 분석을 처음부터 새로 실행합니다.
+## 실행 방법
 
-수신 중지·연결 오류 시 지금까지 받은 답변을 유지합니다. 수신 중지는 브라우저의 연결을 종료하며 서버 작업의 취소를 보장하지 않습니다. 완료한 답변은 화면을 나가기 전에 저장해 주세요. 현재 화면은 `/analyses`의 생성·조회 API를 사용하지 않습니다. 실제 이벤트 형식은 [SSE 연동 문서](docs/sse-contract.md)에 정리했습니다.
+### 1. 설치
 
-## SSE 로컬 확인
-
-실제 백엔드나 외부 AI를 호출하지 않는 테스트 서버로 요청·진행·답변 흐름을 확인할 수 있습니다.
+필요: Node.js 24 (`.nvmrc`)
 
 ```sh
-# 터미널 1: 테스트 서버 (기본 127.0.0.1:8000, BE와 동시 사용하지 않음)
-npm run dev:sse
-
-# 터미널 2: FE
-VITE_API_ORIGIN=http://127.0.0.1:8000 npm run dev
+git clone https://github.com/codyssey-hackathon/kkoripyo-fe.git
+cd kkoripyo-fe
+npm ci
 ```
 
-`http://localhost:3000`에서 `fixture_ok`를 제출하면 테스트 답변을 볼 수 있습니다. `fixture_slow`는 느린 수신·중단, `fixture_error`는 서버 오류, `fixture_disconnect`는 완료 전 연결 종료, `fixture_empty`는 빈 답변, `fixture_http`는 HTTP 오류, `fixture_pending`은 답변 대기·heartbeat를 확인합니다. 테스트 서버 포트는 `SSE_FIXTURE_PORT`로 바꿀 수 있으며 FE 오리진 설정도 함께 바꿉니다.
-
-`npm run test`는 실제 백엔드의 POST·이벤트 형식, UTF-8·SSE 경계 처리, HTTP·payload 오류, 부분 응답, 완료 신호, 취소·대기 시간 처리를 확인합니다. `npm run check`에는 이 테스트가 포함됩니다.
-
-## 환경 변수
-
-로컬 개발을 시작하기 전에 예시 파일을 복사합니다.
+### 2. 환경설정
 
 ```sh
 cp .env.example .env.local
+```
+
+| 변수              | 설명                                                                |
+| ----------------- | ------------------------------------------------------------------- |
+| `VITE_API_ORIGIN` | 필수. 백엔드 주소(경로 없이). 로컬 백엔드는 `http://localhost:8000` |
+
+API 키는 프론트에 넣지 않습니다(백엔드에서만 사용). `VITE_` 값은 빌드 결과에 그대로 들어가는 공개 정보입니다.
+
+### 3. 실행
+
+백엔드([kkoripyo-be](https://github.com/codyssey-hackathon/kkoripyo-be))를 `http://localhost:8000`에 띄운 뒤:
+
+```sh
 npm run dev
 ```
 
-개발 서버와 `npm run preview`는 모두 `http://localhost:3000`을 사용합니다. 포트가 이미 사용 중이면 다른 포트로 변경하지 않고 오류로 종료합니다.
+http://localhost:3000 에서 인스타그램 아이디를 입력하면 진단이 시작됩니다.
 
-`VITE_API_ORIGIN`은 사용자의 브라우저에서 접근할 수 있는 백엔드 오리진입니다. 로컬 기본 예시는 `http://localhost:8000`이며, `/api/v1` 같은 API 경로는 포함하지 않습니다. 앱에서 `import.meta.env.VITE_API_ORIGIN`으로 읽을 수 있습니다. 값이 없거나 올바른 HTTP(S) 오리진이 아니면 개발 서버 시작과 빌드를 중단합니다.
+백엔드 없이 화면만 확인할 때는 테스트용 SSE 서버를 씁니다 (실제 계정 조회·AI 호출 없음).
 
-실제 분석 실행과 SSE 수신은 이 오리진으로 직접 요청합니다. 로컬 테스트 서버를 사용할 때도 해당 서버의 오리진을 지정합니다.
+```sh
+# 터미널 1
+npm run dev:sse
+# 터미널 2
+VITE_API_ORIGIN=http://127.0.0.1:8000 npm run dev
+```
+
+아이디에 `fixture_ok`(정상), `fixture_slow`(느림), `fixture_error`(서버 오류), `fixture_disconnect`(연결 끊김), `fixture_empty`(빈 답변), `fixture_http`(HTTP 오류)를 넣으면 각 상황을 볼 수 있습니다.
+
+### 검사·빌드
+
+```sh
+npm run check   # 타입·테스트·린트·포맷·빌드
+npm run build   # dist/ 에 정적 파일 생성
+```
+
+백엔드 이벤트 형식은 [SSE 연동 문서](docs/sse-contract.md)에 정리했습니다.
 
 ## Docker Compose 실행 (권장)
 
