@@ -89,14 +89,16 @@ export function estimateProgress(stages: Stage[], prev: number) {
       !s.id.startsWith('collect:') &&
       s.id !== 'report' &&
       s.id !== 'blur' &&
+      s.id !== 'pick' &&
       s.state !== 'running',
   ).length
   if (rounds > 0 || stages.some((s) => !s.id.startsWith('collect:'))) {
     value = Math.max(value, 40 + 45 * (1 - 0.82 ** rounds))
   }
   const report = stages.find((s) => s.id === 'report')
-  if (report) value = Math.max(value, report.state === 'running' ? 88 : 95)
-  if (stages.some((s) => s.id === 'blur')) value = Math.max(value, 97)
+  if (report) value = Math.max(value, report.state === 'running' ? 93 : 97)
+  if (stages.some((s) => s.id === 'pick')) value = Math.max(value, 86)
+  if (stages.some((s) => s.id === 'blur')) value = Math.max(value, 89)
   return Math.max(prev, Math.min(99, Math.round(value)))
 }
 
