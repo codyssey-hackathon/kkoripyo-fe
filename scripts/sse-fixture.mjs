@@ -65,11 +65,12 @@ const server = createServer(async (req, res) => {
   const send = (data) => res.write(`data: ${JSON.stringify(data)}\r\n\r\n`)
   res.write(': connected\r\n\r\n')
   // 실제 진단과 같은 순서의 테스트 타임라인 [지연(ms), 이벤트]. 이름·계정은 모두 가상
-  const stage = (id, text, state = 'running') => ({
+  const stage = (id, text, state = 'running', detail) => ({
     type: 'stage',
     id,
     text,
     state,
+    ...(detail ? { detail } : {}),
   })
   const token = (text) => ({ type: 'token', text })
   const finding = (
@@ -113,7 +114,15 @@ const server = createServer(async (req, res) => {
     [300, stage('collect:following', '팔로잉 294명 확인', 'done')],
     [900, stage('collect:posts', '피드 24개 확인', 'done')],
     [0, stage('collect:ocr', '사진 속 글자 읽는 중')],
-    [0, stage('collect:comments', '댓글 읽는 중 (0/14)')],
+    [
+      0,
+      stage(
+        'collect:comments',
+        '댓글 읽는 중 (0/14)',
+        'running',
+        '누가 당신에게 자주 말을 거는지, 어떤 말로 당신을 부르는지 읽습니다',
+      ),
+    ],
     [
       0,
       stage('collect:friends', '가까운 친구들의 피드에서 당신의 흔적 찾는 중'),
@@ -184,7 +193,9 @@ const server = createServer(async (req, res) => {
       0,
       stage(
         'call_1:get_following',
-        '친구 계정의 팔로잉 목록 받아오는 중 (3개 계정)',
+        '@sohee_0205, @jiwoo.03 외 1명의 팔로잉 목록 뒤지는 중',
+        'running',
+        "@sohee_0205가 당신의 3월 2일 벚꽃 사진과 4월 18일 과제 사진에 모두 7번 댓글을 남겼고, 그중 하나가 '목요일 마케팅원론 수강신청 했어?'입니다. 같은 수업을 듣는 사이라, 이 친구들이 함께 팔로우하는 학과 계정에서 당신의 학교를 확인합니다",
       ),
     ],
     [
