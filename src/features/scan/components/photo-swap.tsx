@@ -18,16 +18,24 @@ export function PhotoSwap({ photos }: { photos: BlurEvent[] }) {
         이 사진으로 교체하세요
       </h2>
       <p className="mt-1 text-[13.5px] text-muted">
-        사진에 적힌 글자 중 개인정보가 보이는 부분을 가렸습니다. 원본을 내리고
-        오른쪽 사진으로 다시 올리세요.
+        지금 가장 시급한 사진입니다. 사진에 적힌 글자 중 개인정보가 보이는
+        부분을 가렸습니다. 당신이 올린 사진은 원본을 내리고 오른쪽 사진으로 다시
+        올리고, 다른 사람이 올린 사진은 그 사람에게 바꿔 달라고 요청하세요.
       </p>
       <ul className="mt-5 max-w-[760px] space-y-6">
         {photos.map((p) => (
           <li key={p.image_id}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <p className="text-[14px] font-semibold text-alert-2">
-                {p.reason || '개인정보가 보이는 사진'}
-              </p>
+              <div className="min-w-0">
+                {p.owner && (
+                  <span className="mb-1 inline-block rounded-full border border-line-2 px-2 py-0.5 text-[11.5px] text-fg-2">
+                    @{p.owner}이(가) 올린 사진 · 당신이 태그·언급됨
+                  </span>
+                )}
+                <p className="text-[14px] font-semibold text-alert-2">
+                  {p.reason || '개인정보가 보이는 사진'}
+                </p>
+              </div>
               <span className="text-[12px] text-muted">
                 {p.posted_at?.slice(0, 10)}
                 {p.post_url && (
@@ -52,7 +60,9 @@ export function PhotoSwap({ photos }: { photos: BlurEvent[] }) {
                   className="aspect-square w-full rounded-xl bg-surface-2 object-cover ring-1 ring-alert-line"
                 />
                 <figcaption className="mt-1.5 text-[12px] text-muted">
-                  지금 올라가 있는 사진
+                  {p.owner
+                    ? `@${p.owner}의 피드에 올라가 있는 사진`
+                    : '지금 올라가 있는 사진'}
                 </figcaption>
               </figure>
               <figure className="min-w-0">
@@ -68,7 +78,7 @@ export function PhotoSwap({ photos }: { photos: BlurEvent[] }) {
                   </div>
                 )}
                 <figcaption className="mt-1.5 text-[12px] text-muted">
-                  바꿀 사진
+                  {p.owner ? `@${p.owner}에게 보낼 사진` : '바꿀 사진'}
                   {p.after && (
                     <a
                       href={fromApi(p.after)}

@@ -53,6 +53,8 @@ export const scanEventSchema = z.discriminatedUnion('type', [
     before: z.string(),
     after: z.string().nullish(),
     error: z.string().nullish(),
+    /** 다른 사람이 올린 사진이면 그 계정 (없으면 본인 사진) */
+    owner: z.string().nullish(),
   }),
   z.object({ type: z.literal('done') }),
   z.object({
