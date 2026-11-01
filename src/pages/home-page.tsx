@@ -1,5 +1,7 @@
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { useRef } from 'react'
 import { FindingsBoard } from '@/features/scan/components/findings-board'
+import { LiveToast } from '@/features/scan/components/live-toast'
 import { PhotoSwap } from '@/features/scan/components/photo-swap'
 import { ProgressPanel } from '@/features/scan/components/progress-panel'
 import { RiskPanel } from '@/features/scan/components/risk-panel'
@@ -38,6 +40,7 @@ function HomePage() {
   const { state, start, stop } = useScan()
   const idle = state.phase === 'idle'
   const running = state.phase === 'running'
+  const dashboardRef = useRef<HTMLDivElement>(null)
 
   return (
     <LayoutGroup>
@@ -143,7 +146,8 @@ function HomePage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease, delay: 0.38 }}
-            className="grid gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]"
+            ref={dashboardRef}
+            className="grid scroll-mt-24 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]"
           >
             <FindingsBoard state={state} />
             <RiskPanel state={state} />
@@ -158,6 +162,18 @@ function HomePage() {
             <PhotoSwap photos={state.photos} />
           </motion.div>
         </main>
+      )}
+      {!idle && (
+        <LiveToast
+          state={state}
+          watchRef={dashboardRef}
+          onJump={() =>
+            dashboardRef.current?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            })
+          }
+        />
       )}
     </LayoutGroup>
   )
