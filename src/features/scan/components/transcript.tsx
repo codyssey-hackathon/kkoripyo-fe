@@ -20,7 +20,7 @@ export function Transcript({ state }: { state: ScanState }) {
             </span>
           )}
         </div>
-        <div className="mt-2 max-w-[68ch]">
+        <div className="mt-2">
           {narration.length === 0 ? (
             <p className="py-6 text-[14px] text-faint">
               {running
@@ -49,7 +49,7 @@ export function Transcript({ state }: { state: ScanState }) {
           className="panel border-line-2 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-5 sm:p-8"
           aria-label="종합 리포트"
         >
-          <div className="prose-scan max-w-[72ch]">
+          <div className="prose-scan">
             <Markdown {...analysisMarkdownOptions}>{report.text}</Markdown>
             {writingReport && <Caret />}
           </div>

@@ -11,6 +11,7 @@ export const scanEventSchema = z.discriminatedUnion('type', [
     id: z.string().min(1).max(300),
     text: z.string().min(1).max(2000),
     state: z.enum(['running', 'done', 'error']),
+    detail: z.string().max(2000).optional(),
   }),
   z.object({ type: z.literal('status'), text: z.string().max(2000) }),
   z.object({
