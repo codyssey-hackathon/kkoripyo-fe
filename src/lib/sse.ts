@@ -35,7 +35,7 @@ export function createSseParser(onEvent: (event: SseEvent) => void) {
           if (character === '\n') continue
         }
         eventSize += character.length
-        if (eventSize > 1024 * 1024) {
+        if (eventSize > 8 * 1024 * 1024) {
           throw new Error('분석 답변의 한 구간이 너무 커서 수신을 중단했어요.')
         }
         if (character === '\r' || character === '\n') {

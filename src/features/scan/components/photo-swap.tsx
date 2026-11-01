@@ -1,4 +1,14 @@
+import { apiOrigin } from '@/lib/env'
 import type { BlurEvent } from '../events.ts'
+
+/** 백엔드가 준 상대 주소(/api/v1/...)는 백엔드 주소 기준으로 바꾼다 */
+function fromApi(url: string) {
+  try {
+    return new URL(url, apiOrigin).href
+  } catch {
+    return url
+  }
+}
 
 export function PhotoSwap({ photos }: { photos: BlurEvent[] }) {
   if (!photos.length) return null
@@ -48,7 +58,7 @@ export function PhotoSwap({ photos }: { photos: BlurEvent[] }) {
               <figure className="min-w-0">
                 {p.after ? (
                   <img
-                    src={p.after}
+                    src={fromApi(p.after)}
                     alt="개인정보를 가린 사진"
                     className="aspect-square w-full rounded-xl bg-surface-2 object-cover ring-1 ring-line-2"
                   />
@@ -61,7 +71,7 @@ export function PhotoSwap({ photos }: { photos: BlurEvent[] }) {
                   바꿀 사진
                   {p.after && (
                     <a
-                      href={p.after}
+                      href={fromApi(p.after)}
                       download={`${p.image_id}_kkoripyo.jpg`}
                       className="ml-2 text-fg underline decoration-line-2 underline-offset-4"
                     >
