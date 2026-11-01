@@ -1,3 +1,4 @@
+import type { Ref } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
@@ -22,7 +23,14 @@ function verdict(high: number, total: number) {
   return '아직 드러난 정보가 없습니다'
 }
 
-export function RiskPanel({ state }: { state: ScanState }) {
+export function RiskPanel({
+  state,
+  numberRef,
+}: {
+  state: ScanState
+  /** 노출 위험도 숫자. 화면 밖으로 나가면 오른쪽 아래 알림을 띄우는 기준 */
+  numberRef?: Ref<HTMLDivElement>
+}) {
   const counts = severityCounts(state)
   const total = exposedCount(state)
   const recent = [...state.feed].reverse().slice(0, 5)
@@ -34,7 +42,7 @@ export function RiskPanel({ state }: { state: ScanState }) {
       aria-label="노출 위험도"
     >
       <h2 className="panel-title">노출 위험도</h2>
-      <div className="mt-3 flex items-end gap-2">
+      <div ref={numberRef} className="mt-3 flex items-end gap-2">
         <span
           className={cn(
             'tabular text-[44px] leading-none font-bold tracking-[-0.04em]',
